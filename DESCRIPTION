@@ -1,0 +1,14 @@
+Package: dcap
+Type: Package
+Title: DCAP (Dynamic Cetacean Abundance Prediction)
+Version: 0.1.0
+Date: 2010-02-24
+Maintainer: Lindesay Scott-Hayward <lass@st-andrews.ac.uk>
+Author: Lindesay Scott-Hayward <lass@st-andrews.ac.uk>, Lorenzo Milazzo
+Description: A program to update the species density distribution by using survey data and output from predictive models.
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.0
+Imports:
+  fields
