@@ -85,9 +85,19 @@ evaluatePosterior<- function(data_new_y, data_new_cv, data_prior_y, data_prior_c
       post_cv[i]<- NA
     }
     else{
-      if(y==0){
-        y<- 1e-20
-      }
+      if(is.na(data_prior_y[i])==T){
+        post_y[i]<- data_new_y[i]
+        post_sigma[i]<- NA
+        post_cv[i]<- data_new_cv[i]
+      }else{
+        if(data_prior_cv[i]==0 & data_prior_y[i]==0){
+        post_y[i]<- data_new_y[i]
+        post_sigma[i]<- NA
+        post_cv[i]<- data_new_cv[i]
+      }else{
+        if(y==0){
+          y<- 1e-20
+        }
       sigma2logy = log(data_new_cv[i]^2+1)                # variance of log(y) (taken as known)
       # prior mean and cv of lognormal
       mutheta = log(data_prior_y[i]) - 0.5*log(data_prior_cv[i]^2+1)     # prior mean for theta=mean[log(y)]
@@ -107,7 +117,7 @@ evaluatePosterior<- function(data_new_y, data_new_cv, data_prior_y, data_prior_c
       post_y[i]<- estpost$muln
       post_sigma[i]<- estpost$sigma2ln
       post_cv[i]<- sqrt(estpost$sigma2ln)/estpost$muln   # calculate posterior cv of y
-    }
+    }}}
 
   }
 
@@ -441,7 +451,7 @@ searchHoles<- function(data_p_m, range_lon, range_lat){
 #'
 #' runUpdateProcedure(data_s, data_p)
 #'
-runUpdateProcedure<- function(data_s, data_p, filepath='./', DEBUG_MODE=FALSE){
+runUpdateProcedure<- function(data_s, data_p, filepath='./', DEBUG_MODE=FALSE, filetag=''){
 
   library(fields)
   library(splancs)
@@ -541,12 +551,12 @@ runUpdateProcedure<- function(data_s, data_p, filepath='./', DEBUG_MODE=FALSE){
   # select a subset of prior data that corresponds to a region
   # including the survey area;
   # more precisely ...
-  # . extend the survey area by adding 3 degrees in all directions;
+  # . extend the survey area by adding 4 degrees in all directions;
   # . select the prior data that corresponds to this region;
   range_s<- rbind(range(data_s$Longitude), range(data_s$Latitude))
   range_p<- range_s
-  range_p[,1]<- range_s[,1] - 3
-  range_p[,2]<- range_s[,2] + 3
+  range_p[,1]<- range_s[,1] - 4
+  range_p[,2]<- range_s[,2] + 4
   data_p_sl<- data_p[data_p$Longitude>=range_p[1,1] &
                      data_p$Longitude<=range_p[1,2] &
                      data_p$Latitude>=range_p[2,1] &
@@ -825,7 +835,7 @@ runUpdateProcedure<- function(data_s, data_p, filepath='./', DEBUG_MODE=FALSE){
                 add=T)
     }
 
-    points(data_new$Longitude, data_new$Latitude)
+    points(data_new$Longitude, data_new$Latitude, pch='x', cex=0.5)
     points(data_new$Longitude[which(is.na(data_post$post_y))],
            data_new$Latitude[which(is.na(data_post$post_y))], pch=20)
     cat("\n> DEBUG - plotting data ... done\n")
@@ -838,7 +848,9 @@ runUpdateProcedure<- function(data_s, data_p, filepath='./', DEBUG_MODE=FALSE){
   # updated densities (posterior)
   densities_u<- data.frame(data_prior$Latitude, data_prior$Longitude,
                            data_post$post_y, data_post$post_cv)
-  names(densities_u)<- c('Latitude', 'Longitude', 'PredictedDensity', 'QualityDensity')
+  names(densities_u)<- c('Latitude', 'Longitude',
+
+                         'PredictedDensity', 'QualityDensity')
 
   # coordinate transformation; convert back from virtual grid
   densities_u$Longitude<- densities_u$Longitude - k_lon
@@ -855,7 +867,7 @@ runUpdateProcedure<- function(data_s, data_p, filepath='./', DEBUG_MODE=FALSE){
   #
   # output:
   #  . updated densities
-  write.csv(densities_u, file=paste(filepath, 'densities_u.csv', sep=''), row.names=FALSE)
+  write.csv(densities_u, file=paste(filepath, 'densities_u_', filetag ,'.csv', sep=''), row.names=FALSE)
   cat("\n++ writing output (updated densities) ... done\n")
 
 
@@ -974,7 +986,7 @@ runUpdateProcedure<- function(data_s, data_p, filepath='./', DEBUG_MODE=FALSE){
   #
   # output:
   #  . smoothed densities
-  write.csv(densities_sm, file=paste(filepath, 'densities_sm.csv', sep=''), row.names=FALSE)
+  write.csv(densities_sm, file=paste(filepath, 'densities_sm_',filetag,'.csv', sep=''), row.names=FALSE)
   cat("\n++ writing output (smoothed densities) ... done\n")
 
 
